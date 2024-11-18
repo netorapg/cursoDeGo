@@ -8,4 +8,5 @@ import (
 func main() {
 	fmt.Println("Olá, mundo!")
 	auxiliar.Escrever()
+
 }
