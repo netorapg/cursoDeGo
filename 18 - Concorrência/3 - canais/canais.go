@@ -20,6 +20,11 @@ func main() {
 		fmt.Println(mensagem)
 	}
 
+	/*
+		for mensagem := range canal {
+			fmt.Println(mensagem)
+		}
+	*/
 	fmt.Println("Fim do programa")
 }
 
