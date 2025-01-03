@@ -4,7 +4,7 @@ package enderecos
 import "testing"
 
 func TestTipoDeEndereco(t *testing.T) {
-	enderecoParaTeste := "Avenidao Paulista"
+	enderecoParaTeste := "Avenida Paulista"
 
 	tipoDeEnderecoEsperado := "Avenida"
 	tipoDeEnderecoRecebido := TipoDeEndereco(enderecoParaTeste)
