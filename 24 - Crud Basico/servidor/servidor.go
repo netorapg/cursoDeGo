@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type usuario struct {
@@ -47,4 +50,77 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf("Usuário inserido com sucesso! ID: %d", idInserido)))
+}
+
+// BuscarUsuarios busca todos os usuários salvos no banco
+func BuscarUsuarios(w http.ResponseWriter, r *http.Request) {
+	db, erro := banco.Conectar()
+	if erro != nil {
+		http.Error(w, "Erro ao conectar no banco de dados: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	linhas, erro := db.Query("SELECT * FROM usuarios")
+	if erro != nil {
+		http.Error(w, "Erro ao buscar os usuários: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer linhas.Close()
+
+	var usuarios []usuario
+	for linhas.Next() {
+		var usuario usuario
+
+		if erro := linhas.Scan(&usuario.ID, &usuario.Nome, &usuario.Email); erro != nil {
+			http.Error(w, "Erro ao escanear o usuário: "+erro.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		usuarios = append(usuarios, usuario)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if erro := json.NewEncoder(w).Encode(usuarios); erro != nil {
+		w.Write([]byte("Erro ao converter os usuários para JSON"))
+		return
+	}
+}
+
+// BuscarUsuario busca um usuário especifico salvo no banco
+func BuscarUsuario(w http.ResponseWriter, r *http.Request) {
+	parametros := mux.Vars(r)
+
+	ID, erro := strconv.ParseUint(parametros["id"], 10, 32)
+	if erro != nil {
+		http.Error(w, "Erro ao converter o parâmetro para inteiro", http.StatusBadRequest)
+		return
+	}
+
+	db, erro := banco.Conectar()
+	if erro != nil {
+		http.Error(w, "Erro ao conectar no banco de dados: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	linha, erro := db.Query("SELECT * FROM usuarios WHERE id = $1", ID)
+	if erro != nil {
+		http.Error(w, "Erro ao buscar o usuário: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var usuario usuario
+	if linha.Next() {
+		if erro := linha.Scan(&usuario.ID, &usuario.Nome, &usuario.Email); erro != nil {
+			http.Error(w, "Erro ao escanear o usuário: "+erro.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if erro := json.NewEncoder(w).Encode(usuario); erro != nil {
+		http.Error(w, "Erro ao converter o usuário para JSON", http.StatusInternalServerError)
+		return
+	}
+
 }
