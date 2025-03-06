@@ -17,6 +17,7 @@ type usuario struct {
 	Email string `json:"email"`
 }
 
+// CriarUsuario insere um usuário no banco
 func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 	corpoRequisicao, erro := io.ReadAll(r.Body)
 	if erro != nil {
@@ -123,4 +124,48 @@ func BuscarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+// AtualizarUsuario atualiza um usuário especifico salvo no banco
+func AtualizarUsuario(w http.ResponseWriter, r *http.Request) {
+	parametros := mux.Vars(r)
+
+	ID, erro := strconv.ParseUint(parametros["id"], 10, 32)
+	if erro != nil {
+		http.Error(w, "Erro ao converter o parâmetro para inteiro", http.StatusBadRequest)
+		return
+	}
+
+	corpoRequisicao, erro := io.ReadAll(r.Body)
+	if erro != nil {
+		http.Error(w, "Falha ao ler o corpo da requisição", http.StatusBadRequest)
+		return
+	}
+
+	var usuario usuario
+	if erro = json.Unmarshal(corpoRequisicao, &usuario); erro != nil {
+		http.Error(w, "Erro ao converter o usuário", http.StatusBadRequest)
+		return
+	}
+
+	db, erro := banco.Conectar()
+	if erro != nil {
+		http.Error(w, "Erro ao conectar no banco de dados: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	statement, erro := db.Prepare("update usuarios set nome = $1, email = $2 where id = $3")
+	if erro != nil {
+		http.Error(w, "Erro ao criar o statement: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer statement.Close()
+
+	if _, erro := statement.Exec(usuario.Nome, usuario.Email, ID); erro != nil {
+		http.Error(w, "Erro ao atualizar o usuário: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
