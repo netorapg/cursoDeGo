@@ -169,3 +169,34 @@ func AtualizarUsuario(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// DeletarUsuario deleta um usuário especifico salvo no banco
+func DeletarUsuario(w http.ResponseWriter, r *http.Request) {
+	parametros := mux.Vars(r)
+	ID, erro := strconv.ParseUint(parametros["id"], 10, 32)
+	if erro != nil {
+		http.Error(w, "Erro ao converter o parâmetro para inteiro", http.StatusBadRequest)
+		return
+	}
+
+	db, erro := banco.Conectar()
+	if erro != nil {
+		http.Error(w, "Erro ao conectar no banco de dados: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	statement, erro := db.Prepare("delete from usuarios where id = $1")
+	if erro != nil {
+		http.Error(w, "Erro ao criar o statement: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer statement.Close()
+
+	if _, erro := statement.Exec(ID); erro != nil {
+		http.Error(w, "Erro ao deletar o usuário: "+erro.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
