@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+
+    <style>
+        body {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            color: #c3c3c3;
+            font-size: 50px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        marquee {
+            font-size: 30px;
+            color: blue
+        }
+    </style>
 </head>
+
 <body>
     <h2>
         Pagina Principal
@@ -12,6 +34,15 @@
     <marquee>
         <h4>Seja bem vindo, {{ .Nome }}</h4>
     </marquee>
-</body>
-</html>
 
+    <button id="botao">Clique em Mim!</button>
+
+    <script>
+        var botao = document.getElementById('botao');
+        botao.onclick = function() {
+            alert('Você clicou em mim!');
+        }
+    </script>
+</body>
+
+</html>
